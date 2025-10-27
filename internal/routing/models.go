@@ -11,3 +11,10 @@ type GameLog struct {
 	Message     string
 	Username    string
 }
+
+type SimpleQueueType int
+
+const (
+	Durable SimpleQueueType = iota
+	Transient
+)
