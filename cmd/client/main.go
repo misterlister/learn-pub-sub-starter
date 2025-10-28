@@ -45,6 +45,20 @@ func main() {
 
 	gameState := gamelogic.NewGameState(username)
 
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilDirect,
+		routing.PauseKey+"."+username,
+		routing.PauseKey,
+		routing.Transient,
+		handlerPause(gameState),
+	)
+
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		return
+	}
+
 	running := true
 
 	for running {
