@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -45,9 +43,41 @@ func main() {
 		return
 	}
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
+	gameState := gamelogic.NewGameState(username)
 
-	fmt.Println("\nShutting down connection...")
+	running := true
+
+	for running {
+
+		input := gamelogic.GetInput()
+
+		if len(input) == 0 {
+			continue
+		}
+
+		switch input[0] {
+
+		case "spawn":
+			err = gameState.CommandSpawn(input)
+			if err != nil {
+				fmt.Println(err)
+			}
+		case "move":
+			_, err := gameState.CommandMove(input)
+			if err != nil {
+				fmt.Println(err)
+			}
+		case "status":
+			gameState.CommandStatus()
+		case "help":
+			gamelogic.PrintClientHelp()
+		case "spam":
+			fmt.Println("Spamming not allowed yet!")
+		case "quit":
+			gamelogic.PrintQuit()
+			running = false
+		default:
+			fmt.Println("Unknown command entered.")
+		}
+	}
 }
