@@ -24,6 +24,19 @@ func main() {
 
 	fmt.Println("Connection successful!")
 
+	_, _, err = pubsub.DeclareAndBind(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.GameLogSlug,
+		routing.GameLogSlug+".*",
+		routing.Durable,
+	)
+
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		return
+	}
+
 	connChan, err := conn.Channel()
 
 	if err != nil {
