@@ -32,7 +32,7 @@ func DeclareAndBind(
 	}
 
 	err = connChan.QueueBind(
-		queueName,
+		newQueue.Name,
 		key,
 		exchange,
 		false,
