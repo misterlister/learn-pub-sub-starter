@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
@@ -35,26 +33,18 @@ func main() {
 
 	gamelogic.PrintServerHelp()
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-
 	running := true
 
 	for running {
-		select {
-		case <-signalChan:
-			running = false
-		default:
-			// no interrupt signal, continue running
-		}
 
 		input := gamelogic.GetInput()
 
-		switch {
-		case len(input) == 0:
+		if len(input) == 0 {
 			continue
+		}
 
-		case strings.ToLower(input[0]) == "pause":
+		switch strings.ToLower(input[0]) {
+		case "pause":
 			fmt.Println("Sending pause command...")
 
 			err = pubsub.PublishJSON(connChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
@@ -65,7 +55,7 @@ func main() {
 			}
 			fmt.Println("Game paused.")
 
-		case strings.ToLower(input[0]) == "resume":
+		case "resume":
 			fmt.Println("Sending resume command...")
 
 			err = pubsub.PublishJSON(connChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: false})
@@ -76,13 +66,12 @@ func main() {
 			}
 			fmt.Println("Game resumed.")
 
-		case strings.ToLower(input[0]) == "quit":
-			fmt.Println("Exiting game...")
+		case "quit":
+			fmt.Println("Exiting game.")
+			running = false
 
 		default:
-			fmt.Println("Unknown command entered...")
+			fmt.Println("Unknown command entered.")
 		}
 	}
-
-	fmt.Println("\nShutting down connection.")
 }
