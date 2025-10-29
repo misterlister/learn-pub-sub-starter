@@ -55,7 +55,28 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		fmt.Printf("error: could not connect to game state queue. - %v", err)
+		return
+	}
+
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.ArmyMovesPrefix+"."+username,
+		routing.ArmyMovesPrefix+".*",
+		routing.Transient,
+		handlerMove(gameState),
+	)
+
+	if err != nil {
+		fmt.Printf("error: could not connect to move queue. - %v", err)
+		return
+	}
+
+	connChan, err := conn.Channel()
+
+	if err != nil {
+		fmt.Printf("error: could not create connection channel. - %v", err)
 		return
 	}
 
@@ -77,10 +98,24 @@ func main() {
 				fmt.Println(err)
 			}
 		case "move":
-			_, err := gameState.CommandMove(input)
+			currentMove, err := gameState.CommandMove(input)
 			if err != nil {
 				fmt.Println(err)
+				continue
 			}
+
+			err = pubsub.PublishJSON(connChan,
+				routing.ExchangePerilTopic,
+				routing.ArmyMovesPrefix+"."+username,
+				currentMove,
+			)
+
+			if err != nil {
+				fmt.Printf("error: could not publish move. - %v", err)
+				continue
+			}
+			fmt.Println("Move published.")
+
 		case "status":
 			gameState.CommandStatus()
 		case "help":
