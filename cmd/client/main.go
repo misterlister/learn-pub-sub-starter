@@ -55,7 +55,7 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Printf("error: could not connect to game state queue. - %v", err)
+		fmt.Printf("error: could not connect to game state queue. - %v\n", err)
 		return
 	}
 
@@ -69,14 +69,14 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Printf("error: could not connect to move queue. - %v", err)
+		fmt.Printf("error: could not connect to move queue. - %v\n", err)
 		return
 	}
 
 	connChan, err := conn.Channel()
 
 	if err != nil {
-		fmt.Printf("error: could not create connection channel. - %v", err)
+		fmt.Printf("error: could not create connection channel. - %v\n", err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func main() {
 			)
 
 			if err != nil {
-				fmt.Printf("error: could not publish move. - %v", err)
+				fmt.Printf("error: could not publish move. - %v\n", err)
 				continue
 			}
 			fmt.Println("Move published.")

@@ -14,7 +14,7 @@ func SubscribeJSON[T any](
 	queueName,
 	key string,
 	queueType routing.SimpleQueueType,
-	handler func(T),
+	handler func(T) AckType,
 ) error {
 	connChan, queue, err := DeclareAndBind(
 		conn,
@@ -45,14 +45,29 @@ func SubscribeJSON[T any](
 	go func() {
 		for delivery := range deliveryChan {
 			var msg T
-			err = json.Unmarshal(delivery.Body, &msg)
+			marshalErr := json.Unmarshal(delivery.Body, &msg)
 
-			if err != nil {
-				fmt.Printf("error: %v", err)
-				continue
+			if marshalErr != nil {
+				fmt.Printf("error: unable to unmarshal data - %v\n", marshalErr)
+				delivery.Nack(false, false)
 			}
-			handler(msg)
-			delivery.Ack(false)
+
+			ackStatus := handler(msg)
+
+			switch ackStatus {
+			case Ack:
+				fmt.Println("Ack")
+				delivery.Ack(false)
+			case NackRequeue:
+				fmt.Println("NackRequeue")
+				delivery.Nack(false, true)
+			case NackDiscard:
+				fmt.Println("NackDiscard")
+				delivery.Nack(false, false)
+			default:
+				fmt.Printf("Unknown AckType=%v\n", ackStatus)
+				delivery.Nack(false, false)
+			}
 		}
 	}()
 
