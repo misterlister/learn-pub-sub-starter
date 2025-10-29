@@ -33,14 +33,14 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		fmt.Printf("error: could not connect to game logs queue. - %v", err)
 		return
 	}
 
 	connChan, err := conn.Channel()
 
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		fmt.Printf("error: could not create connection channel. - %v", err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func main() {
 			err = pubsub.PublishJSON(connChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
 
 			if err != nil {
-				fmt.Printf("error: %v", err)
+				fmt.Printf("error: could not publish pause command. - %v", err)
 				continue
 			}
 			fmt.Println("Game paused.")
@@ -74,7 +74,7 @@ func main() {
 			err = pubsub.PublishJSON(connChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: false})
 
 			if err != nil {
-				fmt.Printf("error: %v", err)
+				fmt.Printf("error: could not publish resume command. - %v", err)
 				continue
 			}
 			fmt.Println("Game resumed.")
