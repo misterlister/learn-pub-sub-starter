@@ -30,19 +30,6 @@ func main() {
 		return
 	}
 
-	_, _, err = pubsub.DeclareAndBind(
-		conn,
-		routing.ExchangePerilDirect,
-		routing.PauseKey+"."+username,
-		routing.PauseKey,
-		routing.Transient,
-	)
-
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		return
-	}
-
 	gameState := gamelogic.NewGameState(username)
 
 	err = pubsub.SubscribeJSON(
@@ -62,14 +49,14 @@ func main() {
 	err = pubsub.SubscribeJSON(
 		conn,
 		routing.ExchangePerilTopic,
-		routing.ArmyMovesPrefix+"."+username,
-		routing.ArmyMovesPrefix+".*",
-		routing.Transient,
-		handlerMove(gameState),
+		routing.WarRecognitionsPrefix,
+		routing.WarRecognitionsPrefix+".*",
+		routing.Durable,
+		handlerWar(gameState),
 	)
 
 	if err != nil {
-		fmt.Printf("error: could not connect to move queue. - %v\n", err)
+		fmt.Printf("error: could not connect to war declarations queue. - %v\n", err)
 		return
 	}
 
@@ -77,6 +64,20 @@ func main() {
 
 	if err != nil {
 		fmt.Printf("error: could not create connection channel. - %v\n", err)
+		return
+	}
+
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.ArmyMovesPrefix+"."+username,
+		routing.ArmyMovesPrefix+".*",
+		routing.Transient,
+		handlerMove(gameState, connChan),
+	)
+
+	if err != nil {
+		fmt.Printf("error: could not connect to move queue. - %v\n", err)
 		return
 	}
 
@@ -104,7 +105,8 @@ func main() {
 				continue
 			}
 
-			err = pubsub.PublishJSON(connChan,
+			err = pubsub.PublishJSON(
+				connChan,
 				routing.ExchangePerilTopic,
 				routing.ArmyMovesPrefix+"."+username,
 				currentMove,
