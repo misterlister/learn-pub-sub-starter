@@ -24,7 +24,7 @@ func DeclareAndBind(
 		queueType == routing.Transient,
 		queueType == routing.Transient,
 		false,
-		nil,
+		amqp.Table{"x-dead-letter-exchange": "peril_dlx"},
 	)
 
 	if err != nil {
